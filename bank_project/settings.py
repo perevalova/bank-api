@@ -27,6 +27,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
 
 # Application definition
 
@@ -40,9 +43,11 @@ INSTALLED_APPS = [
 
     # 3-rd party
     'rest_framework',
+    'debug_toolbar',
 
     # Local
-    'users.apps.UsersConfig'
+    'users.apps.UsersConfig',
+    'banking.apps.BankingConfig'
 ]
 
 MIDDLEWARE = [
@@ -53,6 +58,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'bank_project.urls'
