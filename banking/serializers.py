@@ -1,3 +1,6 @@
+import decimal
+import requests
+
 from django.core.validators import RegexValidator
 from rest_framework import serializers
 
@@ -30,8 +33,19 @@ class AccountSerializer(serializers.ModelSerializer):
     holder = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
+    balance_usd = serializers.SerializerMethodField()
 
     class Meta:
         model = Account
-        fields = ('uid', 'balance', 'holder', 'created', 'status')
-        read_only_fields = ('uid', 'balance','holder',  'created', 'status')
+        fields = ('uid', 'balance', 'holder', 'created', 'status', 'balance_usd')
+        read_only_fields = ('uid', 'balance','holder',  'created', 'status', 'balance_usd')
+
+    def get_balance_usd(self, obj):
+        """
+        Account balance in USD
+        """
+        url = 'https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=11'
+        get_currency = requests.get(url)
+        decimal.getcontext().prec = 2 # set new precision
+        currency = get_currency.json()[0]['sale'] # currency exchange for UAH to USD
+        return obj.balance/decimal.Decimal(currency)
