@@ -1,7 +1,8 @@
 from django.core.validators import RegexValidator
 from rest_framework import serializers
 
-from banking.models import Customer
+from banking.models import Customer, Account
+from users.serializers import CustomUserSerializer
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -19,3 +20,18 @@ class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = ('uid', 'user', 'birthday', 'address', 'passport', 'phone_number')
+
+
+class CustomerUserSerializer(CustomerSerializer):
+    user = CustomUserSerializer()
+
+
+class AccountSerializer(serializers.ModelSerializer):
+    holder = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = Account
+        fields = ('uid', 'balance', 'holder', 'created', 'status')
+        read_only_fields = ('uid', 'balance','holder',  'created', 'status')
