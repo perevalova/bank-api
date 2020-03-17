@@ -78,11 +78,3 @@ class TransferSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "No such account or account is inactive")
         return data
-
-    def validate_amount(self, value):
-        """
-        Check if amount grater than 0
-        """
-        if value <= 0:
-            raise serializers.ValidationError('Amount must be more than 0')
-        return value
