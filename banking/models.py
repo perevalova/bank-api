@@ -1,7 +1,7 @@
 import uuid
 
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 
 
 class AccountActiveManager(models.Manager):
@@ -78,3 +78,59 @@ class Account(models.Model):
 
     def __str__(self):
         return f'{self.uid}, {self.status}'
+
+
+class Transfer(models.Model):
+    account_from = models.ForeignKey(
+        Account,
+        on_delete=models.CASCADE,
+        related_name='account_from'
+    )
+    account_to = models.ForeignKey(
+        Account,
+        on_delete=models.CASCADE,
+        related_name='account_to'
+    )
+    amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+    date = models.DateTimeField(
+        auto_now_add=True
+    )
+    comment = models.TextField(
+        blank=True,
+    )
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f'{self.account_from} - {self.account_to}'
+
+    @classmethod
+    def make_transfer(cls, account_from, account_to, amount, comment):
+        if account_from.balance < amount:
+            raise (ValueError('Not enough money on balance!!!'))
+        if account_from == account_to:
+            raise (ValueError('Type another account!'))
+        if account_to.status == Account.INACTIVE or account_to.status == Account.BLOCKED:
+            raise (ValueError('Account of receiver is inactive or blocked!'))
+
+        with transaction.atomic():
+            account_from.balance -= amount
+            account_from.save()
+
+            account_to.balance += amount
+            account_to.save()
+
+            transfer = cls.objects.create(
+                account_from=account_from,
+                account_to=account_to,
+                amount=amount,
+                comment=comment
+            )
+
+        return account_from, account_to, transfer
+

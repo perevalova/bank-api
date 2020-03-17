@@ -1,11 +1,11 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import viewsets
 
-from banking.models import Customer, Account
+from banking.models import Customer, Account, Transfer
 from banking.serializers import CustomerSerializer, CustomerUserSerializer, \
-    AccountSerializer
+    AccountSerializer, TransferSerializer
 
 
 class CustomerList(generics.ListCreateAPIView):
@@ -66,3 +66,29 @@ class AccountView(viewsets.ModelViewSet):
         account.save()
 
         return Response(status=status.HTTP_200_OK)
+
+
+class TransferView(viewsets.GenericViewSet,
+                   mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   mixins.RetrieveModelMixin):
+    """
+    Make transfer from account to another account
+    """
+    serializer_class = TransferSerializer
+    queryset = Transfer.objects.all()
+
+    def get_queryset(self):
+        account = Account.objects.filter(holder_id=self.request.user)
+        return self.queryset.filter(account_from__in=account)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            Transfer.make_transfer(**serializer.validated_data)
+        except ValueError:
+            content = {'error': 'Not enough money on balance!'}
+            return Response(content, status=status.HTTP_404_NOT_FOUND)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

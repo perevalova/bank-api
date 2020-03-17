@@ -4,7 +4,7 @@ import requests
 from django.core.validators import RegexValidator
 from rest_framework import serializers
 
-from banking.models import Customer, Account
+from banking.models import Customer, Account, Transfer
 from users.serializers import CustomUserSerializer
 
 
@@ -49,3 +49,40 @@ class AccountSerializer(serializers.ModelSerializer):
         decimal.getcontext().prec = 2 # set new precision
         currency = get_currency.json()[0]['sale'] # currency exchange for UAH to USD
         return obj.balance/decimal.Decimal(currency)
+
+
+class TransferSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        """
+        Set current user in account_from field
+        """
+        super().__init__(*args, **kwargs)
+        if 'request' in self.context:
+            self.fields['account_from'].queryset = self.fields['account_from'] \
+                .queryset.filter(holder=self.context['view'].request.user)
+
+    account_to = serializers.CharField()
+
+    class Meta:
+        model = Transfer
+        fields = ('account_from', 'account_to', 'amount', 'date', 'comment')
+        read_only_fields = ('date',)
+        extra_kwargs = {
+            'amount': {'required': True}
+        }
+
+    def validate(self, data):
+        try:
+            data['account_to'] = Account.objects.get(uid=data['account_to'])
+        except Exception as e:
+            raise serializers.ValidationError(
+                "No such account or account is inactive")
+        return data
+
+    def validate_amount(self, value):
+        """
+        Check if amount grater than 0
+        """
+        if value <= 0:
+            raise serializers.ValidationError('Amount must be more than 0')
+        return value
