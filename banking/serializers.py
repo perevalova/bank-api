@@ -4,7 +4,7 @@ import requests
 from django.core.validators import RegexValidator
 from rest_framework import serializers
 
-from banking.models import Customer, Account, Transfer
+from banking.models import Customer, Account, Transfer, Transaction
 from users.serializers import CustomUserSerializer
 
 
@@ -78,3 +78,19 @@ class TransferSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "No such account or account is inactive")
         return data
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'request' in self.context:
+            self.fields['account'].queryset = self.fields['account'] \
+                .queryset.filter(holder=self.context['view'].request.user)
+
+    class Meta:
+        model = Transaction
+        fields = ('account', 'merchant', 'amount', 'comment', 'date')
+        read_only_fields = ('date',)
+        extra_kwargs = {
+            'amount': {'required': True}
+        }

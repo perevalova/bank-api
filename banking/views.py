@@ -3,9 +3,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import viewsets
 
-from banking.models import Customer, Account, Transfer
+from banking.models import Customer, Account, Transfer, Transaction
 from banking.serializers import CustomerSerializer, CustomerUserSerializer, \
-    AccountSerializer, TransferSerializer
+    AccountSerializer, TransferSerializer, TransactionSerializer
 
 
 class CustomerList(generics.ListCreateAPIView):
@@ -87,6 +87,32 @@ class TransferView(viewsets.GenericViewSet,
         serializer.is_valid(raise_exception=True)
         try:
             Transfer.make_transfer(**serializer.validated_data)
+        except ValueError:
+            content = {'error': 'Not enough money on balance!'}
+            return Response(content, status=status.HTTP_404_NOT_FOUND)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class TransactionView(mixins.ListModelMixin,
+                      mixins.CreateModelMixin,
+                      mixins.RetrieveModelMixin,
+                      viewsets.GenericViewSet):
+    """
+    Make transaction from account to merchant
+    """
+    serializer_class = TransactionSerializer
+    queryset = Transaction.objects.all()
+
+    def get_queryset(self):
+        account = Account.objects.filter(holder_id=self.request.user)
+        return self.queryset.filter(account__in=account)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            Transaction.make_transaction(**serializer.validated_data)
         except ValueError:
             content = {'error': 'Not enough money on balance!'}
             return Response(content, status=status.HTTP_404_NOT_FOUND)

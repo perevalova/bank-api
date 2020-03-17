@@ -136,3 +136,42 @@ class Transfer(models.Model):
 
         return account_from, account_to, transfer
 
+
+class Transaction(models.Model):
+    account = models.ForeignKey(
+        Account,
+        on_delete=models.CASCADE
+    )
+    merchant = models.CharField(
+        max_length=255
+    )
+    amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))]
+    )
+    date = models.DateTimeField(
+        auto_now_add=True
+    )
+    comment = models.TextField(
+        blank=True,
+    )
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f'Account {self.account.uid} sent {self.amount} to {self.merchant}'
+
+    @classmethod
+    def make_transaction(cls, account, merchant, amount, comment):
+        if account.balance < amount:
+            raise (ValueError('Not enough money!'))
+
+        with transaction.atomic():
+            account.balance -= amount
+            account.save()
+            tran = cls.objects.create(
+                amount=amount, account=account, merchant=merchant, comment=comment)
+
+        return account, tran
