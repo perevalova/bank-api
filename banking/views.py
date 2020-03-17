@@ -1,7 +1,9 @@
+import requests
 from rest_framework import generics, status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import viewsets
+from rest_framework.views import APIView
 
 from banking.models import Customer, Account, Transfer, Transaction
 from banking.serializers import CustomerSerializer, CustomerUserSerializer, \
@@ -118,3 +120,15 @@ class TransactionView(mixins.ListModelMixin,
             return Response(content, status=status.HTTP_404_NOT_FOUND)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class CurrencyRate(APIView):
+    """
+    View currency exchange rate.
+    USD, EUR, RUR, BTC
+    """
+
+    def get(self, request, format=None):
+        url = 'https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=11'
+        currency = requests.get(url)
+        return Response(currency.json())
