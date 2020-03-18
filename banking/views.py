@@ -1,10 +1,14 @@
 import requests
+from sys import exc_info
+
 from rest_framework import generics, status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import viewsets
 from rest_framework.views import APIView
 
+from banking.exceptions import InvalidAmount, InvalidAccount, \
+    InvalidAccountReceiver
 from banking.models import Customer, Account, Transfer, Transaction
 from banking.serializers import CustomerSerializer, CustomerUserSerializer, \
     AccountSerializer, TransferSerializer, TransactionSerializer
@@ -89,9 +93,11 @@ class TransferView(viewsets.GenericViewSet,
         serializer.is_valid(raise_exception=True)
         try:
             Transfer.make_transfer(**serializer.validated_data)
-        except ValueError:
-            content = {'error': 'Not enough money on balance!'}
-            return Response(content, status=status.HTTP_404_NOT_FOUND)
+        except (InvalidAmount, InvalidAccount, InvalidAccountReceiver):
+            error_type, error, tb = exc_info() # get error message and status code
+            content = {'error': error.detail}
+            status_code = error.status_code
+            return Response(content, status=status_code)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -115,9 +121,11 @@ class TransactionView(mixins.ListModelMixin,
         serializer.is_valid(raise_exception=True)
         try:
             Transaction.make_transaction(**serializer.validated_data)
-        except ValueError:
-            content = {'error': 'Not enough money on balance!'}
-            return Response(content, status=status.HTTP_404_NOT_FOUND)
+        except InvalidAmount:
+            error_type, error, tb = exc_info() # get error message and status code
+            content = {'error': error.detail}
+            status_code = error.status_code
+            return Response(content, status=status_code)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -127,7 +135,6 @@ class CurrencyRate(APIView):
     View currency exchange rate.
     USD, EUR, RUR, BTC
     """
-
     def get(self, request, format=None):
         url = 'https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=11'
         currency = requests.get(url)

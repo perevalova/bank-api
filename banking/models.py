@@ -4,6 +4,10 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
+from rest_framework import serializers
+
+from banking.exceptions import InvalidAccountReceiver, InvalidAccount, \
+    InvalidAmount
 
 
 class AccountActiveManager(models.Manager):
@@ -114,11 +118,11 @@ class Transfer(models.Model):
     @classmethod
     def make_transfer(cls, account_from, account_to, amount, comment):
         if account_from.balance < amount:
-            raise (ValueError('Not enough money on balance!!!'))
+            raise InvalidAmount()
         if account_from == account_to:
-            raise (ValueError('Type another account!'))
+            raise InvalidAccount()
         if account_to.status == Account.INACTIVE or account_to.status == Account.BLOCKED:
-            raise (ValueError('Account of receiver is inactive or blocked!'))
+            raise InvalidAccountReceiver()
 
         with transaction.atomic():
             account_from.balance -= amount
@@ -166,7 +170,7 @@ class Transaction(models.Model):
     @classmethod
     def make_transaction(cls, account, merchant, amount, comment):
         if account.balance < amount:
-            raise (ValueError('Not enough money!'))
+            raise InvalidAmount()
 
         with transaction.atomic():
             account.balance -= amount

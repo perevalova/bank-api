@@ -74,7 +74,7 @@ class TransferSerializer(serializers.ModelSerializer):
     def validate(self, data):
         try:
             data['account_to'] = Account.objects.get(uid=data['account_to'])
-        except Exception as e:
+        except Exception:
             raise serializers.ValidationError(
                 "No such account or account is inactive")
         return data
@@ -82,6 +82,9 @@ class TransferSerializer(serializers.ModelSerializer):
 
 class TransactionSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
+        """
+        Set current user in account field
+        """
         super().__init__(*args, **kwargs)
         if 'request' in self.context:
             self.fields['account'].queryset = self.fields['account'] \
