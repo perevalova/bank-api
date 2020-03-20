@@ -16,8 +16,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from rest_framework_swagger.views import get_swagger_view
 
 from bank_project import settings
+
+API_TITLE = 'Bank API'
+API_DESCRIPTION = 'A Web API for bank transfers and transactions.'
+schema_view = get_swagger_view(title=API_TITLE)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,6 +30,7 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),
+    path('swagger-docs/', schema_view),
 ]
 
 if settings.DEBUG:
