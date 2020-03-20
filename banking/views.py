@@ -1,7 +1,7 @@
 import requests
 from sys import exc_info
 
-from rest_framework import generics, status, mixins
+from rest_framework import generics, status, mixins, filters
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -87,6 +87,9 @@ class TransferView(viewsets.GenericViewSet,
     serializer_class = TransferSerializer
     queryset = Transfer.objects.all()
     permission_classes = (IsAuthenticated,)
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['account_to']
+    ordering_fields = ['account_to', 'date']
 
     def get_queryset(self):
         account = Account.objects.filter(holder_id=self.request.user)
@@ -116,6 +119,9 @@ class TransactionView(mixins.ListModelMixin,
     serializer_class = TransactionSerializer
     queryset = Transaction.objects.all()
     permission_classes = (IsAuthenticated,)
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['merchant']
+    ordering_fields = ['merchant', 'date']
 
     def get_queryset(self):
         account = Account.objects.filter(holder_id=self.request.user)
