@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 
     # 3-rd party
     'rest_framework',
+    'corsheaders',
     'debug_toolbar',
     'djoser',
     'rest_framework_swagger',
@@ -56,6 +57,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -171,3 +173,5 @@ SWAGGER_SETTINGS = {
     'LOGIN_URL': 'rest_framework:login',
     'LOGOUT_URL': 'rest_framework:logout',
 }
+
+CORS_ORIGIN_ALLOW_ALL = True
