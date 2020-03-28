@@ -179,3 +179,42 @@ class Transaction(models.Model):
                 amount=amount, account=account, merchant=merchant, comment=comment)
 
         return account, tran
+
+
+class Deposit(models.Model):
+    account = models.ForeignKey(
+        Account,
+        on_delete=models.CASCADE
+    )
+    amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('10.00'))]
+    )
+    date = models.DateTimeField(
+        auto_now_add=True
+    )
+    comment = models.TextField(
+        blank=True,
+    )
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f'Account {self.account.uid} made a {self.amount} deposit'
+
+    @classmethod
+    def make_deposit(cls, account, amount, comment):
+
+        with transaction.atomic():
+            account.balance += amount
+            account.save()
+
+            deposit = cls.objects.create(
+                account=account,
+                amount=amount,
+                comment=comment
+            )
+
+        return account, deposit

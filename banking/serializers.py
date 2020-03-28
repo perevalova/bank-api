@@ -4,7 +4,7 @@ import requests
 from django.core.validators import RegexValidator
 from rest_framework import serializers
 
-from banking.models import Customer, Account, Transfer, Transaction
+from banking.models import Customer, Account, Transfer, Transaction, Deposit
 from users.serializers import CustomUserSerializer
 
 
@@ -93,6 +93,25 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = ('account', 'merchant', 'amount', 'comment', 'date')
+        read_only_fields = ('date',)
+        extra_kwargs = {
+            'amount': {'required': True}
+        }
+
+
+class DepositSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        """
+        Set current user in account field
+        """
+        super().__init__(*args, **kwargs)
+        if 'request' in self.context:
+            self.fields['account'].queryset = self.fields['account'] \
+                .queryset.filter(holder=self.context['view'].request.user)
+
+    class Meta:
+        model = Deposit
+        fields = ('account', 'amount', 'date', 'comment')
         read_only_fields = ('date',)
         extra_kwargs = {
             'amount': {'required': True}
