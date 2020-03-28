@@ -116,3 +116,22 @@ class DepositSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'amount': {'required': True}
         }
+
+
+class WithdrawalSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        """
+        Set current user in account field
+        """
+        super().__init__(*args, **kwargs)
+        if 'request' in self.context:
+            self.fields['account'].queryset = self.fields['account'] \
+                .queryset.filter(holder=self.context['view'].request.user)
+
+    class Meta:
+        model = Deposit
+        fields = ('account', 'amount', 'date')
+        read_only_fields = ('date',)
+        extra_kwargs = {
+            'amount': {'required': True}
+        }
