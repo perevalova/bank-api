@@ -2,8 +2,7 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from banking.views import CustomerList, CustomerDetail, AccountView, \
-    TransferView, TransactionView, CurrencyRate, DepositView
-
+    TransferView, TransactionView, CurrencyRate, DepositView, WithdrawalView
 
 app_name = 'banking'
 
@@ -13,6 +12,7 @@ router.register('account', AccountView)
 router.register('transfer', TransferView)
 router.register('transaction', TransactionView)
 router.register('deposit', DepositView)
+router.register('withdrawal', WithdrawalView)
 
 urlpatterns = [
     path('customers/', CustomerList.as_view()),

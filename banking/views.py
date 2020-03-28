@@ -10,10 +10,11 @@ from rest_framework.views import APIView
 
 from banking.exceptions import InvalidAmount, InvalidAccount, \
     InvalidAccountReceiver
-from banking.models import Customer, Account, Transfer, Transaction, Deposit
+from banking.models import Customer, Account, Transfer, Transaction, Deposit, \
+    Withdrawal
 from banking.serializers import CustomerSerializer, CustomerUserSerializer, \
     AccountSerializer, TransferSerializer, TransactionSerializer, \
-    DepositSerializer
+    DepositSerializer, WithdrawalSerializer
 
 
 class CustomerList(generics.ListCreateAPIView):
@@ -164,6 +165,37 @@ class DepositView(mixins.ListModelMixin,
         serializer.is_valid(raise_exception=True)
         try:
             Deposit.make_deposit(**serializer.validated_data)
+        except InvalidAmount:
+            error_type, error, tb = exc_info() # get error message and status code
+            content = {'error': error.detail}
+            status_code = error.status_code
+            return Response(content, status=status_code)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class WithdrawalView(mixins.ListModelMixin,
+                      mixins.CreateModelMixin,
+                      mixins.RetrieveModelMixin,
+                      viewsets.GenericViewSet):
+    """
+    Make withdrawal from account
+    """
+    serializer_class = WithdrawalSerializer
+    queryset = Withdrawal.objects.all()
+    permission_classes = (IsAuthenticated,)
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    ordering_fields = ['date']
+
+    def get_queryset(self):
+        account = Account.objects.filter(holder_id=self.request.user)
+        return self.queryset.filter(account__in=account)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            Withdrawal.make_withdrawal(**serializer.validated_data)
         except InvalidAmount:
             error_type, error, tb = exc_info() # get error message and status code
             content = {'error': error.detail}

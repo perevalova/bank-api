@@ -218,3 +218,40 @@ class Deposit(models.Model):
             )
 
         return account, deposit
+
+
+class Withdrawal(models.Model):
+    account = models.ForeignKey(
+        Account,
+        on_delete=models.CASCADE
+    )
+    amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('10.00'))]
+    )
+    date = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f'Account {self.account.uid} made withdrawal a {self.amount} '
+
+    @classmethod
+    def make_withdrawal(cls, account, amount):
+        if account.balance < amount:
+            raise InvalidAmount()
+
+        with transaction.atomic():
+            account.balance -= amount
+            account.save()
+
+            deposit = cls.objects.create(
+                account=account,
+                amount=amount
+            )
+
+        return account, deposit
