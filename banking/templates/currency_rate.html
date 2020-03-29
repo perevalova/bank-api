@@ -1,0 +1,7 @@
+{% autoescape off %}
+{% for object in object_list %}
+    <h2>{{ object.ccy }} - {{ object.base_ccy }}</h2>
+    <p>Buy: {{ object.buy }}</p>
+    <p>Sale: {{ object.sale }}</p>
+{% endfor %}
+{% endautoescape %}
