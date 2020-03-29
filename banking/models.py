@@ -4,7 +4,6 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
-from rest_framework import serializers
 
 from banking.exceptions import InvalidAccountReceiver, InvalidAccount, \
     InvalidAmount
@@ -38,7 +37,7 @@ class Customer(models.Model):
     )
 
     def __str__(self):
-        return self.uid
+        return f'{self.uid}'
 
 
 class Account(models.Model):
