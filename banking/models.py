@@ -36,6 +36,9 @@ class Customer(models.Model):
         on_delete=models.CASCADE
     )
 
+    class Meta:
+        ordering = ['-id']
+
     def __str__(self):
         return f'{self.uid}'
 
@@ -237,7 +240,7 @@ class Withdrawal(models.Model):
         ordering = ['-date']
 
     def __str__(self):
-        return f'Account {self.account.uid} made withdrawal a {self.amount} '
+        return f'Account {self.account.uid} made withdrawal a {self.amount}'
 
     @classmethod
     def make_withdrawal(cls, account, amount):

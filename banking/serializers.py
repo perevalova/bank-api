@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator
 from rest_framework import serializers
 
 from banking.models import Customer, Account, Transfer, Transaction, Deposit
+from banking.utils import get_currency
 from users.serializers import CustomUserSerializer
 
 
@@ -41,13 +42,9 @@ class AccountSerializer(serializers.ModelSerializer):
         read_only_fields = ('uid', 'balance','holder',  'created', 'status', 'balance_usd')
 
     def get_balance_usd(self, obj):
-        """
-        Account balance in USD
-        """
-        url = 'https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=11'
-        get_currency = requests.get(url)
+        """Account balance in USD"""
         decimal.getcontext().prec = 2 # set new precision
-        currency = get_currency.json()[0]['sale'] # currency exchange for UAH to USD
+        currency = get_currency().json()[0]['sale'] # currency exchange for UAH to USD
         return obj.balance/decimal.Decimal(currency)
 
 

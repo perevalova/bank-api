@@ -15,8 +15,8 @@ router.register('deposit', DepositView)
 router.register('withdrawal', WithdrawalView)
 
 urlpatterns = [
-    path('customers/', CustomerList.as_view()),
-    path('customer/', CustomerDetail.as_view()),
+    path('customers/', CustomerList.as_view(), name='customers'),
+    path('customer/', CustomerDetail.as_view(), name='customer'),
     path('currency/', CurrencyRate.as_view(), name='currency'),
 ]
 urlpatterns += router.urls

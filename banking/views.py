@@ -15,6 +15,7 @@ from banking.models import Customer, Account, Transfer, Transaction, Deposit, \
 from banking.serializers import CustomerSerializer, CustomerUserSerializer, \
     AccountSerializer, TransferSerializer, TransactionSerializer, \
     DepositSerializer, WithdrawalSerializer
+from banking.utils import get_currency
 
 
 class CustomerList(generics.ListCreateAPIView):
@@ -211,6 +212,5 @@ class CurrencyRate(APIView):
     USD, EUR, RUR, BTC
     """
     def get(self, request, format=None):
-        url = 'https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=11'
-        currency = requests.get(url)
+        currency = get_currency()
         return Response(currency.json())
