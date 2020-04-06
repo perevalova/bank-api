@@ -1,4 +1,3 @@
-import requests
 from sys import exc_info
 
 from rest_framework import generics, status, mixins, filters
@@ -12,6 +11,7 @@ from banking.exceptions import InvalidAmount, InvalidAccount, \
     InvalidAccountReceiver
 from banking.models import Customer, Account, Transfer, Transaction, Deposit, \
     Withdrawal
+from banking.search import search
 from banking.serializers import CustomerSerializer, CustomerUserSerializer, \
     AccountSerializer, TransferSerializer, TransactionSerializer, \
     DepositSerializer, WithdrawalSerializer
@@ -50,6 +50,9 @@ class AccountView(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """ Return object for current authenticated user only """
+        q = self.request.query_params.get('q')
+        if q is not None:
+            return search(q)
         return self.queryset.filter(holder=self.request.user)
 
     @action(methods=['put'], detail=True)
