@@ -6,10 +6,12 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 
-from banking.models import Account, Customer
-from banking.serializers import AccountSerializer, CustomerSerializer
+from banking.models import Customer
+from banking.serializers import CustomerSerializer
+
 
 CUSTOMER_URL = reverse('banking:customer')
+CUSTOMERS_URL = reverse('banking:customers')
 
 class PublicCustomerApiTest(APITestCase):
 
@@ -60,7 +62,38 @@ class PrivateCustomerApiTest(APITestCase):
         # self.assertEqual(len(res.data['results']), 1)
         # self.assertEqual(res.data, serializer.data)
 
+    def test_create_customer(self):
+        """Test creating customer"""
+        user = get_user_model().objects.create_user(email='test3@email.com',
+                                                         password='testpassword')
+        client = APIClient()
+        client.force_authenticate(user=user)
+        uid= uuid.uuid4()
+        data = {
+            'birthday': datetime.date.today(),
+            'address': 'New York',
+            'passport': 'OP2345TY',
+            'phone_number': '+380645789165',
+            'user': user
+        }
+        res = client.post(CUSTOMERS_URL, data)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        customer = Customer.objects.get(uid=res.data['uid'])
+        for key in data.keys():
+            self.assertEqual(data[key], getattr(customer, key))
+
     def test_partial_update_account(self):
+        data = {
+            'address': 'Caroline'
+        }
+
+        res = self.client.patch(CUSTOMER_URL, data)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.address, data['address'])
+
+    def test_full_update_account(self):
         data = {
             'birthday': datetime.date.today(),
             'address': 'Kyiv',
@@ -72,15 +105,3 @@ class PrivateCustomerApiTest(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.customer.refresh_from_db()
         self.assertEqual(self.customer.address, data['address'])
-
-    def test_full_update_account(self):
-
-        data = {
-            'address': 'Caroline'
-        }
-
-        res = self.client.patch(CUSTOMER_URL, data)
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.customer.refresh_from_db()
-        self.assertEqual(self.customer.address, data['address'])
-
