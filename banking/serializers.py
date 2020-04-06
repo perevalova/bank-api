@@ -4,6 +4,7 @@ import requests
 from django.core.validators import RegexValidator
 from rest_framework import serializers
 
+from banking.documents import AccountDocument
 from banking.models import Customer, Account, Transfer, Transaction, Deposit
 from banking.utils import get_currency
 from users.serializers import CustomUserSerializer

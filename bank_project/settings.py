@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'djoser',
     'rest_framework_swagger',
+    'django_elasticsearch_dsl',
+    'django_elasticsearch_dsl_drf',
 
     # Local
     'users.apps.UsersConfig',
@@ -223,3 +225,10 @@ CACHES = {
 
 # Cache time to live is 15 minutes.
 CACHE_TTL = 60 * 15
+
+# Elasticksearch
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': '127.0.0.1:9200'
+    },
+}
