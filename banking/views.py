@@ -103,10 +103,9 @@ class TransferView(viewsets.GenericViewSet,
         serializer.is_valid(raise_exception=True)
         try:
             Transfer.make_transfer(**serializer.validated_data)
-        except (InvalidAmount, InvalidAccount, InvalidAccountReceiver):
-            error_type, error, tb = exc_info() # get error message and status code
-            content = {'error': error.detail}
-            status_code = error.status_code
+        except (InvalidAmount, InvalidAccount, InvalidAccountReceiver) as err:
+            content = {err.default_code: err.detail}
+            status_code = err.status_code
             return Response(content, status=status_code)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -135,10 +134,9 @@ class TransactionView(mixins.ListModelMixin,
         serializer.is_valid(raise_exception=True)
         try:
             Transaction.make_transaction(**serializer.validated_data)
-        except InvalidAmount:
-            error_type, error, tb = exc_info() # get error message and status code
-            content = {'error': error.detail}
-            status_code = error.status_code
+        except InvalidAmount as err:
+            content = {err.default_code: err.detail}
+            status_code = err.status_code
             return Response(content, status=status_code)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -166,10 +164,9 @@ class DepositView(mixins.ListModelMixin,
         serializer.is_valid(raise_exception=True)
         try:
             Deposit.make_deposit(**serializer.validated_data)
-        except InvalidAmount:
-            error_type, error, tb = exc_info() # get error message and status code
-            content = {'error': error.detail}
-            status_code = error.status_code
+        except InvalidAmount as err:
+            content = {err.default_code: err.detail}
+            status_code = err.status_code
             return Response(content, status=status_code)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -197,10 +194,9 @@ class WithdrawalView(mixins.ListModelMixin,
         serializer.is_valid(raise_exception=True)
         try:
             Withdrawal.make_withdrawal(**serializer.validated_data)
-        except InvalidAmount:
-            error_type, error, tb = exc_info() # get error message and status code
-            content = {'error': error.detail}
-            status_code = error.status_code
+        except InvalidAmount as err:
+            content = {err.default_code: err.detail}
+            status_code = err.status_code
             return Response(content, status=status_code)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
