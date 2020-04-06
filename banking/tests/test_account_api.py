@@ -8,6 +8,7 @@ from rest_framework.test import APITestCase, APIClient
 from banking.models import Account
 from banking.serializers import AccountSerializer
 
+
 ACCOUNT_URL = reverse('banking:account-list')
 
 class PublicAccountApiTest(APITestCase):
@@ -49,6 +50,18 @@ class PrivateAccountApiTest(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data['results']), 1)
         self.assertEqual(res.data['results'], serializer.data)
+
+    def test_create_account_always_zero(self):
+        user = get_user_model().objects.create_user(email='test3@email.com',
+                                               password='testpassword')
+        client = APIClient()
+        client.force_authenticate(user=user)
+        payload = {'balance': 10000.50}
+        res = client.post(ACCOUNT_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        account = Account.objects.get(uid=res.data['uid'])
+        self.assertEqual(0, account.balance)
 
     def test_partial_update_account(self):
         url = ACCOUNT_URL + str(self.account.uid) + '/'
